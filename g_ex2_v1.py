@@ -1,7 +1,7 @@
 import json
 
 dict = {}
-f_dict = open('s_dict.txt', 'r')
+f_dict = open('s_dict_v1.txt', 'r')
 s_dict = f_dict.read()
 if len(s_dict)!=0 :
     dict = json.loads(s_dict)
@@ -55,7 +55,6 @@ def show(p_date) :
             print(dict[p_date])
         else :
             print('Date not found!')
-
 
 def d_save() :
     global dict
