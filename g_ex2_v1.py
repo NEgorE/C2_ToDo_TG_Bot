@@ -1,15 +1,17 @@
 import json
 
 dict = {}
-f_dict = open('s_dict.txt', 'r')
+f_dict = open('s_dict_v1.txt', 'r')
 s_dict = f_dict.read()
 if len(s_dict)!=0 :
     dict = json.loads(s_dict)
 f_dict.close()
 
+GLOBAL_TASK_ID = 0
+if dict != {} :
+    GLOBAL_TASK_ID = dict['MAX_TASK_ID']
 
 RUN = True
-GLOBAL_TASK_ID = 0
 cur_command = ''
 HELP = '''
 Available commands:
@@ -34,9 +36,10 @@ def add_task() :
     in_task = input('Input task: ')
     GLOBAL_TASK_ID += 1
 
-    dict_day[GLOBAL_TASK_ID] = in_task
+    dict_day[str(GLOBAL_TASK_ID)] = in_task
 
     dict[in_date] = dict_day
+    dict["MAX_TASK_ID"] = GLOBAL_TASK_ID
 
 
 def help() :
@@ -45,9 +48,19 @@ def help() :
 
 def show(p_date) :
     global dict
-    print(dict)
+    if p_date == '' :
+        print(dict)
+    else :
+        if p_date in dict :
+            print(dict[p_date])
+        else :
+            print('Date not found!')
 
-
+def d_save() :
+    global dict
+    new_f_dict = open('s_dict.txt', 'w')
+    new_f_dict.write(str(dict).replace('\'','\"'))
+    new_f_dict.close()
 
 while RUN :
     in_str = input('Input command pls:\n')
@@ -62,6 +75,7 @@ while RUN :
     
 
     if cur_command == '/exit' :
+        d_save()
         RUN = False
 
     elif cur_command == '/show' :
@@ -72,9 +86,8 @@ while RUN :
     
     elif cur_command == '/add' :
         add_task()
-
     else :
-        print('\nWrong command!!!\nPls enter correct command or /HELP for show list of available comands.\n')
+        print('\nWrong command!!!\nUse /HELP for show list of available comands.\n')
 
 
 print('\nBye!!!')
