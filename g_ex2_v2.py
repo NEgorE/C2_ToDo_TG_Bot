@@ -36,18 +36,20 @@ def check_date(t_date_in) :
         return False
 
 
-def check_time(t_time_in) :
-    ret = False
-    try :
-        hh = int(t_time_in[0:1])
-        mm = int(t_time_in[3:4])
-        if hh < 25 and mm < 60  and t_time_in[2] ==':':
-            ret = True
-    except ValueError:
-        ret = False
-    if not ret :
-        print('It\'s not correct time!')
-    return ret
+def check_time(msg) :
+    time_loop = True
+    while time_loop :
+        t_time_in = input(msg)
+        try :
+            hh = int(t_time_in[0:2])
+            mm = int(t_time_in[3:5])
+            if hh < 25 and mm < 60  and t_time_in[2] ==':':
+                time_loop = False
+            else :
+                print('It\'s not correct time!')
+        except ValueError:
+            print('It\'s not correct time!')
+    return t_time_in
 
 
 def add_task() :
@@ -59,12 +61,11 @@ def add_task() :
         t_date = input('Input date (YYYY-MM-DD): ')
         if check_date(t_date) :
             date_loop = False
-    time_loop = True
-    while time_loop :
-        t_time = input('Input time (HH:MM): ')
-        if check_time(t_time) :
-            time_loop = False
+    t_time = check_time('Input task time (HH:MM): ')
     t_text = input('Input Task: ')
+    t_not = input('Need notification? (input Y or N): ')
+    #if t_not == 'Y' :
+    #    not_time_loop
     
         
 def show() :
