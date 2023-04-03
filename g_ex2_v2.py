@@ -18,13 +18,13 @@ Available commands:
 #1,2023-03-30,15:30,Test task n1,N,,ToDo
 #2,2023-03-31,08:30,Test task n2,N,,ToDo
 
-list = []
-f_list = open(FILE, 'r')
-for str in f_list :
-    list.append(tuple(str.replace('\n','').split(',')))
-f_list.close()
-list.sort(key=itemgetter(0))
-max_task_in_file = int(list[-1][0])
+list_tasks = []
+f_list_tasks = open(FILE, 'r')
+for str in f_list_tasks :
+    list_tasks.append(tuple(str.replace('\n','').split(',')))
+f_list_tasks.close()
+list_tasks.sort(key=itemgetter(0))
+max_task_in_file = int(list_tasks[-1][0])
 changed = False
 
 
@@ -58,7 +58,7 @@ def check_time(msg) :
 
 
 def add_task() :
-    global max_task_in_file, list, changed
+    global max_task_in_file, list_tasks, changed
     max_task_in_file +=1
     t_id = max_task_in_file
     t_date = check_date('Input date (YYYY-MM-DD): ')
@@ -70,43 +70,41 @@ def add_task() :
     else :
         t_time_not = ''
     t_status = 'ToDo'
-    list.append(tuple((t_id,t_date,t_time,t_text,t_not,t_time_not,t_status)))
+    list_tasks.append(tuple((t_id,t_date,t_time,t_text,t_not,t_time_not,t_status)))
     changed = True
     
         
-def show() :
-    global list
-    print(list)
+def show(cur_command_in) :
+    global list_tasks
+    if cur_command == '/show' :
+        print(list_tasks)
+    else :
+        p_date_in = cur_command[cur_command.find(' ')+1:len(cur_command)]
+        list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
+        print(list(list_tasks_filtred))
 
 
-def save_list() :
-    global list, changed
+def save_list_tasks() :
+    global list_tasks, changed
     if changed :
         with open(FILE, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerows(list)
+            writer.writerows(list_tasks)
 
 
 while RUN :
-    in_str = input('Input command pls:\n')
-    p_point = in_str.find(' ')
-    if p_point == -1 :
-        cur_command = in_str
-        p_date = ''
-    else :
-        cur_command=in_str[0:in_str.find(' ')]
-        p_date = in_str[in_str.find(' ')+1:len(in_str)-1]
+    cur_command = input('Input command pls:\n')
     if cur_command == '/exit' :
-        save_list()
+        save_list_tasks()
         RUN = False
-    elif cur_command == '/show' :
-        show()
+    elif cur_command.find('/show') > -1 : #cur_command == '/show' :
+        show(cur_command)
     elif cur_command == '/HELP' :
         print(HELP)
     elif cur_command == '/add' :
         add_task()
     else :
-        print('\nWrong command!!!\nUse /HELP for show list of available comands.\n')
+        print('\nWrong command!!!\nUse /HELP for show list_tasks of available comands.\n')
 
 
 print('\nBye!!!')
