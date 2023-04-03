@@ -28,6 +28,20 @@ max_task_in_file = int(list_tasks[-1][0])
 changed = False
 
 
+def print_list(lfp) :
+    lfp_ord = lfp
+    lfp_ord.sort(key=itemgetter(1))
+    cur_date = ''
+    pref_date = ''
+    for task in lfp :
+        cur_date = task[1]
+        if cur_date != pref_date : 
+            print(f'\n{cur_date}:')
+        print(f'    - {task[2]} : {task[3]}')
+        pref_date = cur_date
+    print('')
+
+
 def check_date(msg) :
     date_format = '%Y-%m-%d'
     date_loop = True
@@ -77,11 +91,11 @@ def add_task() :
 def show(cur_command_in) :
     global list_tasks
     if cur_command == '/show' :
-        print(list_tasks)
+        print_list(list_tasks)
     else :
         p_date_in = cur_command[cur_command.find(' ')+1:len(cur_command)]
         list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
-        print(list(list_tasks_filtred))
+        print_list(list(list_tasks_filtred))
 
 
 def save_list_tasks() :
@@ -92,17 +106,32 @@ def save_list_tasks() :
             writer.writerows(list_tasks)
 
 
+def del_task_by_id() :
+    global list_tasks
+    del_loop = True
+    while del_loop :
+        id = input('Input id task for delete:\n')
+        list_tasks_filtred = list(filter(lambda t: (t[0] == id) , list_tasks))
+        if len(list_tasks_filtred) > 1 :
+            print('')
+        else :
+            print('Wrong task id!!!')
+
+
+
 while RUN :
     cur_command = input('Input command pls:\n')
     if cur_command == '/exit' :
-        save_list_tasks()
         RUN = False
     elif cur_command.find('/show') > -1 : #cur_command == '/show' :
         show(cur_command)
     elif cur_command == '/HELP' :
         print(HELP)
+    elif cur_command == '/del' :
+        del_task_by_id()
     elif cur_command == '/add' :
         add_task()
+        save_list_tasks()
     else :
         print('\nWrong command!!!\nUse /HELP for show list_tasks of available comands.\n')
 
