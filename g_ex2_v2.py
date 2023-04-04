@@ -4,15 +4,7 @@ import csv
 
 RUN = True
 FILE = 's_list.txt'
-HELP = '''
-Available commands:
-/show <date>    - show all tasks for date (first 10 if date is empty)
-/add            - add new task
-/del            - del task by ID
-/clear <date>   - dell all tasks for 1 day (del all tasks if date is empty)
-/HELP           - show all available commands
-/exit           - stop programm\n
-'''
+
 
 #1,2023-03-30,15:30,Test task n1,N,,ToDo
 #2,2023-03-31,08:30,Test task n2,N,,ToDo
@@ -92,10 +84,10 @@ def add_task() :
         
 def show(cur_command_in) :
     global list_tasks
-    if cur_command == '/show' :
+    if cur_command_in == '/show' :
         print_list(list_tasks)
     else :
-        p_date_in = cur_command[cur_command.find(' ')+1:len(cur_command)]
+        p_date_in = cur_command_in[cur_command_in.find(' ')+1:len(cur_command_in)]
         list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
         print_list(list(list_tasks_filtred))
 
