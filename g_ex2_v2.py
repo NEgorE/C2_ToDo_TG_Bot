@@ -13,10 +13,12 @@ Available commands:
 /HELP           - show all available commands
 /exit           - stop programm\n
 '''
-#[(1,'2023-03-30','15:30','Test task n1','N','','ToDo/Done')]
 
 #1,2023-03-30,15:30,Test task n1,N,,ToDo
 #2,2023-03-31,08:30,Test task n2,N,,ToDo
+#3,2020-01-20,15:15,add_task1,N,,ToDo
+#4,2020-01-20,16:00,add_task2,Y,15:30,ToDo
+#5,2024-01-01,08:00,HNY,Y,07:45,ToDo
 
 list_tasks = []
 f_list_tasks = open(FILE, 'r')
@@ -104,10 +106,11 @@ def save_list_tasks() :
         with open(FILE, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerows(list_tasks)
+        changed = False
 
 
 def del_task_by_id() :
-    global list_tasks
+    global list_tasks, changed
     del_loop = True
     while del_loop :
         id = input('Input id task for delete:\n')
@@ -116,6 +119,8 @@ def del_task_by_id() :
         len_list_with_filter = len(list_tasks_filtred)
         if len_list_no_filter > len_list_with_filter  and  int(id) < max_task_in_file:
             list_tasks = list_tasks_filtred
+            del_loop = False
+            changed = True
         else :
             print('Wrong task id!!!')
 
@@ -130,6 +135,7 @@ while RUN :
         print(HELP)
     elif cur_command == '/del' :
         del_task_by_id()
+        save_list_tasks()
     elif cur_command == '/add' :
         add_task()
         save_list_tasks()
