@@ -111,12 +111,13 @@ def del_task_by_id() :
     del_loop = True
     while del_loop :
         id = input('Input id task for delete:\n')
-        list_tasks_filtred = list(filter(lambda t: (t[0] == id) , list_tasks))
-        if len(list_tasks_filtred) > 1 :
-            print('')
+        len_list_no_filter = len(list_tasks)
+        list_tasks_filtred = list(filter(lambda t: (t[0] != id) , list_tasks))
+        len_list_with_filter = len(list_tasks_filtred)
+        if len_list_no_filter > len_list_with_filter  and  int(id) < max_task_in_file:
+            list_tasks = list_tasks_filtred
         else :
             print('Wrong task id!!!')
-
 
 
 while RUN :
