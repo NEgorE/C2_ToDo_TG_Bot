@@ -19,6 +19,7 @@ Available commands:
 '''
 
 list_tasks = []
+add_task_list = []
 if os.path.isfile(FILE) :
     f_list_tasks = open(FILE, 'r')
     for str in f_list_tasks :
@@ -35,6 +36,7 @@ def help(msg) :
     print(msg.text)
     bot.send_message(msg.chat.id, HELP)
 
+
 @bot.message_handler(commands=["show"])
 def help(msg) :
     msg_id = msg.chat.id
@@ -47,6 +49,33 @@ def help(msg) :
         p_date_in = msg_text[msg_text.find(' ')+1:len(msg_text)]
         list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
         print_list(list(list_tasks_filtred), msg_id)
+
+
+@bot.message_handler(commands=["add"])
+def add_init(msg) :
+    msg_id = msg.chat.id
+    msg_text = msg.text
+    print(msg_text)
+    add(msg_id,'INIT')
+
+def add(msg_id, com):
+    bot.send_message(msg_id, 'You INIT add task proc')
+
+    
+
+def check_date(msg) :
+    date_format = '%Y-%m-%d'
+    date_loop = True
+    while date_loop :
+        t_date_in = input(msg)
+        try:
+            dateObject = datetime.datetime.strptime(t_date_in, date_format)
+            date_loop = False
+        except ValueError:
+            print('It\'s not correct date!')
+    return t_date_in
+
+
 
 def print_list(lfp, msg_id) :
     answ = ''
@@ -65,5 +94,6 @@ def print_list(lfp, msg_id) :
         bot.send_message(msg_id, answ)
     else :
         bot.send_message(msg_id, 'List is empty :(')
+
 
 bot.polling(none_stop = True)
