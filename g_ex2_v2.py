@@ -21,6 +21,16 @@ list_tasks.sort(key=itemgetter(0))
 max_task_in_file = int(list_tasks[-1][0])
 changed = False
 
+HELP = '''
+Available commands:
+/show <date>    - show all tasks for date (first 10 if date is empty)
+/add            - add new task
+/del            - del task by ID
+/clear <date>   - dell all tasks for 1 day (del all tasks if date is empty)
+/HELP           - show all available commands
+/exit           - stop programm\n
+'''
+
 
 def print_list(lfp) :
     lfp_ord = lfp
