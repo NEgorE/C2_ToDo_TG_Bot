@@ -3,6 +3,7 @@ from operator import itemgetter
 import datetime
 import csv
 import os.path
+import time
 
 from token_str import token
 bot = telebot.TeleBot(token)
@@ -18,6 +19,7 @@ Available commands:
 /exit           - stop programm\n
 '''
 
+input_str = ''
 list_tasks = []
 add_task_list = []
 if os.path.isfile(FILE) :
@@ -38,7 +40,13 @@ def help(msg) :
 
 
 @bot.message_handler(commands=["show"])
-def help(msg) :
+def show(msg) :
+    global add_task_list
+    #if add_task_list == [] :
+    #    bot.send_message(msg.chat.id, 'add_task_list is empty')
+    #else :
+    #    bot.send_message(msg.chat.id, add_task_list)
+    print(add_task_list)
     msg_id = msg.chat.id
     msg_text = msg.text
     print(msg_text)
@@ -56,27 +64,36 @@ def add_init(msg) :
     msg_id = msg.chat.id
     msg_text = msg.text
     print(msg_text)
-    add(msg_id,'INIT')
+    add(msg,'INIT')
+    bot.send_message(msg_id, 'Input date pls (YYYY-MM-DD)')
+    bot.register_next_step_handler(msg, add, 'INPUT_DATE')
 
-def add(msg_id, com):
-    bot.send_message(msg_id, 'You INIT add task proc')
+def add(msg, com):
+    global max_task_in_file, add_task_list
+    if com == 'INIT' :
+        max_task_in_file += 1
+        add_task_list.append(max_task_in_file)
+    elif com == 'INPUT_DATE' :
+        in_date = check_date(msg)
+        print(in_date)
+        if in_date == '' :
+            bot.register_next_step_handler(msg, add, 'INPUT_DATE')
+        else :
+            add_task_list.append(in_date)       
 
-    
 
 def check_date(msg) :
+    global input_str
     date_format = '%Y-%m-%d'
-    date_loop = True
-    while date_loop :
-        t_date_in = input(msg)
-        try:
-            dateObject = datetime.datetime.strptime(t_date_in, date_format)
-            date_loop = False
-        except ValueError:
-            print('It\'s not correct date!')
-    return t_date_in
-
-
-
+    dateObject = ''
+    try:
+        dateObject = datetime.datetime.strptime(msg.text, date_format)
+    except ValueError:
+        bot.send_message(msg.chat.id, 'It\'s not correct date!')
+        bot.send_message(msg.chat.id, 'Input date pls (YYYY-MM-DD)')
+    return msg.text
+        
+        
 def print_list(lfp, msg_id) :
     answ = ''
     lfp_ord = lfp
