@@ -87,6 +87,20 @@ def add(msg, com):
             bot.register_next_step_handler(msg, add, 'INPUT_TIME')
         else :
             add_task_list.append(in_time)
+            bot.send_message(msg.chat.id, 'Need notification? (input Y or N): ')
+            bot.register_next_step_handler(msg, add, 'NOTIF_NEED')
+    elif com == 'NOTIF_NEED' :
+        in_notif_need = msg.text
+        print(in_notif_need)
+        if in_notif_need == 'Y' :
+            add_task_list.append(in_notif_need)
+            bot.register_next_step_handler(msg, add, 'INPUT_NOTIF_TIME')
+        elif in_notif_need == 'N' :
+            add_task_list.append(in_notif_need)
+        else :
+            bot.send_message(msg.chat.id, 'Wrong input!!!')
+            bot.send_message(msg.chat.id, 'Need notification? (input Y or N): ')
+            bot.register_next_step_handler(msg, add, 'NOTIF_NEED')
 
 
 def check_time(msg) :
