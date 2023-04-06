@@ -42,10 +42,6 @@ def help(msg) :
 @bot.message_handler(commands=["show"])
 def show(msg) :
     global add_task_list
-    #if add_task_list == [] :
-    #    bot.send_message(msg.chat.id, 'add_task_list is empty')
-    #else :
-    #    bot.send_message(msg.chat.id, add_task_list)
     print(add_task_list)
     msg_id = msg.chat.id
     msg_text = msg.text
@@ -64,9 +60,11 @@ def add_init(msg) :
     msg_id = msg.chat.id
     msg_text = msg.text
     print(msg_text)
+    bot.send_message(msg_id, 'start add mode')
     add(msg,'INIT')
     bot.send_message(msg_id, 'Input date pls (YYYY-MM-DD)')
     bot.register_next_step_handler(msg, add, 'INPUT_DATE')
+
 
 def add(msg, com):
     global max_task_in_file, add_task_list
@@ -79,21 +77,41 @@ def add(msg, com):
         if in_date == '' :
             bot.register_next_step_handler(msg, add, 'INPUT_DATE')
         else :
-            add_task_list.append(in_date)       
+            add_task_list.append(in_date)
+            bot.register_next_step_handler(msg, add, 'INPUT_TIME')       
+    elif com == 'INPUT_TIME' :
+        #in_time = check_time(msg)
+        in_time = msg.text
+        print(in_time)
 
+
+def check_time(msg) :
+    time_loop = True
+    while time_loop :
+        t_time_in = input(msg)
+        try :
+            hh = int(t_time_in[0:2])
+            mm = int(t_time_in[3:5])
+            if hh < 25 and mm < 60  and t_time_in[2] ==':':
+                time_loop = False
+            else :
+                print('It\'s not correct time!')
+        except ValueError:
+            print('It\'s not correct time!')
+    return t_time_in
 
 def check_date(msg) :
-    global input_str
     date_format = '%Y-%m-%d'
-    dateObject = ''
+    return_str = ''
     try:
         dateObject = datetime.datetime.strptime(msg.text, date_format)
+        return_str = msg.text
     except ValueError:
         bot.send_message(msg.chat.id, 'It\'s not correct date!')
         bot.send_message(msg.chat.id, 'Input date pls (YYYY-MM-DD)')
-    return msg.text
+    return return_str
         
-        
+
 def print_list(lfp, msg_id) :
     answ = ''
     lfp_ord = lfp
