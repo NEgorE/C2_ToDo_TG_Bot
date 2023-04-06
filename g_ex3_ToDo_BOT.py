@@ -78,27 +78,33 @@ def add(msg, com):
             bot.register_next_step_handler(msg, add, 'INPUT_DATE')
         else :
             add_task_list.append(in_date)
+            bot.send_message(msg.chat.id, 'Input task time (HH:MM): ')
             bot.register_next_step_handler(msg, add, 'INPUT_TIME')       
     elif com == 'INPUT_TIME' :
-        #in_time = check_time(msg)
-        in_time = msg.text
+        in_time = check_time(msg)
         print(in_time)
+        if in_time == '' :
+            bot.register_next_step_handler(msg, add, 'INPUT_TIME')
+        else :
+            add_task_list.append(in_time)
 
 
 def check_time(msg) :
-    time_loop = True
-    while time_loop :
-        t_time_in = input(msg)
-        try :
-            hh = int(t_time_in[0:2])
-            mm = int(t_time_in[3:5])
-            if hh < 25 and mm < 60  and t_time_in[2] ==':':
-                time_loop = False
-            else :
-                print('It\'s not correct time!')
-        except ValueError:
-            print('It\'s not correct time!')
+    t_time_in = ''
+    try :
+        hh = int(msg.text[0:2])
+        mm = int(msg.text[3:5])
+        if hh < 25 and mm < 60  and msg.text[2] ==':':
+            t_time_in = msg.text
+        else :
+            t_time_in = ''
+    except ValueError:
+        t_time_in = ''
+    if t_time_in == '' :
+        bot.send_message(msg.chat.id, 'It\'s not correct time!')
+        bot.send_message(msg.chat.id, 'Input task time (HH:MM): ')
     return t_time_in
+
 
 def check_date(msg) :
     date_format = '%Y-%m-%d'
