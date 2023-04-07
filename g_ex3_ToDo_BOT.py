@@ -94,7 +94,7 @@ def add(msg, com):
         print(in_notif_need)
         if in_notif_need == 'Y' :
             add_task_list.append(in_notif_need)
-            bot.register_next_step_handler(msg, add, 'INPUT_NOTIF_TIME')
+            #bot.register_next_step_handler(msg, add, 'INPUT_NOTIF_TIME')
         elif in_notif_need == 'N' :
             add_task_list.append(in_notif_need)
         else :
