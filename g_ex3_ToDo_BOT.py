@@ -13,10 +13,8 @@ HELP = '''
 Available commands:
 /show <date>    - show all tasks for date (first 10 if date is empty)
 /add            - add new task
-/del            - del task by ID
-/clear <date>   - dell all tasks for 1 day (del all tasks if date is empty)
-/help           - show all available commands
-/exit           - stop programm\n
+/del <date><taskId> - del task by ID or all tasks for date
+/help           - show all available commands\n
 '''
 
 input_str = ''
@@ -42,10 +40,6 @@ def help(msg) :
 @bot.message_handler(commands=["show"])
 def show(msg) :
     global add_task_list
-    #if add_task_list == [] :
-    #    bot.send_message(msg.chat.id, 'add_task_list is empty')
-    #else :
-    #    bot.send_message(msg.chat.id, add_task_list)
     print(add_task_list)
     msg_id = msg.chat.id
     msg_text = msg.text
@@ -64,9 +58,15 @@ def add_init(msg) :
     msg_id = msg.chat.id
     msg_text = msg.text
     print(msg_text)
+    bot.send_message(msg_id, 'start add mode')
     add(msg,'INIT')
     bot.send_message(msg_id, 'Input date pls (YYYY-MM-DD)')
     bot.register_next_step_handler(msg, add, 'INPUT_DATE')
+
+@bot.message_handler(commands=["del"])
+def del_by_id(msg) :
+    bot.send_message(msg.chat.id, 'Del mod')
+
 
 def add(msg, com):
     global max_task_in_file, add_task_list
@@ -79,32 +79,102 @@ def add(msg, com):
         if in_date == '' :
             bot.register_next_step_handler(msg, add, 'INPUT_DATE')
         else :
-            add_task_list.append(in_date)       
+            add_task_list.append(in_date)
+            bot.send_message(msg.chat.id, 'Input task time (HH:MM): ')
+            bot.register_next_step_handler(msg, add, 'INPUT_TIME')       
+    elif com in ['INPUT_TIME','INPUT_NOTIF_TIME'] :
+        in_time = check_time(msg)
+        print(in_time)
+        if in_time == '' :
+            if com == 'INPUT_TIME' :
+                bot.register_next_step_handler(msg, add, 'INPUT_TIME')
+            else :
+                bot.register_next_step_handler(msg, add, 'INPUT_NOTIF_TIME')
+        else :
+            add_task_list.append(in_time)
+            if com == 'INPUT_TIME' :
+                bot.send_message(msg.chat.id, 'Task task text:')
+                bot.register_next_step_handler(msg, add, 'TASK_TEXT')
+            else :
+                add_task_list.append('ToDo')
+                list_tasks.append(tuple(add_task_list))
+                save_file(list_tasks)
+    elif com == 'NOTIF_NEED' :
+        in_notif_need = msg.text
+        print(in_notif_need)
+        if in_notif_need == 'Y' :
+            add_task_list.append(in_notif_need)
+            bot.send_message(msg.chat.id, 'Input notif time (HH:MM): ')
+            bot.register_next_step_handler(msg, add, 'INPUT_NOTIF_TIME')
+        elif in_notif_need == 'N' :
+            add_task_list.append(in_notif_need)
+            add_task_list.append('')
+            add_task_list.append('ToDo')
+            list_tasks.append(tuple(add_task_list))
+            save_file(list_tasks)
+        else :
+            bot.send_message(msg.chat.id, 'Wrong input!!!')
+            bot.send_message(msg.chat.id, 'Need notification? (input Y or N): ')
+            bot.register_next_step_handler(msg, add, 'NOTIF_NEED')
+    elif com == 'TASK_TEXT' :
+        in_task_text = msg.text
+        if in_task_text == '' :
+            bot.send_message(msg.chat.id, 'Task text cant be empty!!!')
+            bot.send_message(msg.chat.id, 'Task task text:')
+            bot.register_next_step_handler(msg, add, 'TASK_TEXT')
+        else :
+            add_task_list.append(in_task_text)
+            bot.send_message(msg.chat.id, 'Need notification? (input Y or N): ')
+            bot.register_next_step_handler(msg, add, 'NOTIF_NEED')
+
+
+def save_file (t_list) :
+    t_list.sort(key=itemgetter(0))
+    with open(FILE, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows(t_list)
+
+
+def check_time(msg) :
+    t_time_in = ''
+    try :
+        hh = int(msg.text[0:2])
+        mm = int(msg.text[3:5])
+        if hh < 25 and mm < 60  and msg.text[2] ==':':
+            t_time_in = msg.text
+        else :
+            t_time_in = ''
+    except ValueError:
+        t_time_in = ''
+    if t_time_in == '' :
+        bot.send_message(msg.chat.id, 'It\'s not correct time!')
+        bot.send_message(msg.chat.id, 'Input task time (HH:MM): ')
+    return t_time_in
 
 
 def check_date(msg) :
-    global input_str
     date_format = '%Y-%m-%d'
-    dateObject = ''
+    return_str = ''
     try:
         dateObject = datetime.datetime.strptime(msg.text, date_format)
+        return_str = msg.text
     except ValueError:
         bot.send_message(msg.chat.id, 'It\'s not correct date!')
         bot.send_message(msg.chat.id, 'Input date pls (YYYY-MM-DD)')
-    return msg.text
+    return return_str
         
-        
+
 def print_list(lfp, msg_id) :
     answ = ''
     lfp_ord = lfp
-    lfp_ord.sort(key=itemgetter(1))
+    lfp_ord.sort(key=itemgetter(1,2))
     cur_date = ''
     pref_date = ''
     for task in lfp :
         cur_date = task[1]
         if cur_date != pref_date : 
             answ += f'\n{cur_date}:'
-        answ += f'\n    - {task[2]} : {task[3]}'
+        answ += f'\n    - {task[2]} : {task[3]} (taskId: {task[0]})'
         pref_date = cur_date
     answ += ''
     if len(answ.strip()) > 0 :
