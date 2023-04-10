@@ -13,8 +13,7 @@ HELP = '''
 Available commands:
 /show <date>    - show all tasks for date (first 10 if date is empty)
 /add            - add new task
-/del            - del task by ID
-/clear <date>   - dell all tasks for 1 day (del all tasks if date is empty)
+/del <date><taskId> - del task by ID or all tasks for date
 /help           - show all available commands\n
 '''
 
@@ -63,6 +62,10 @@ def add_init(msg) :
     add(msg,'INIT')
     bot.send_message(msg_id, 'Input date pls (YYYY-MM-DD)')
     bot.register_next_step_handler(msg, add, 'INPUT_DATE')
+
+@bot.message_handler(commands=["del"])
+def del_by_id(msg) :
+    bot.send_message(msg.chat.id, 'Del mod')
 
 
 def add(msg, com):
@@ -171,7 +174,7 @@ def print_list(lfp, msg_id) :
         cur_date = task[1]
         if cur_date != pref_date : 
             answ += f'\n{cur_date}:'
-        answ += f'\n    - {task[2]} : {task[3]}'
+        answ += f'\n    - {task[2]} : {task[3]} (taskId: {task[0]})'
         pref_date = cur_date
     answ += ''
     if len(answ.strip()) > 0 :
