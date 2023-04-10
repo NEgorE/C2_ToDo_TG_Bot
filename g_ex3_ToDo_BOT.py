@@ -15,8 +15,7 @@ Available commands:
 /add            - add new task
 /del            - del task by ID
 /clear <date>   - dell all tasks for 1 day (del all tasks if date is empty)
-/help           - show all available commands
-/exit           - stop programm\n
+/help           - show all available commands\n
 '''
 
 input_str = ''
@@ -52,11 +51,7 @@ def show(msg) :
     else :
         p_date_in = msg_text[msg_text.find(' ')+1:len(msg_text)]
         list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
-        if len(list_tasks_filtred) > 0 :
-            print_list(list(list_tasks_filtred), msg_id)
-        else :
-            bot.send_message(msg.chat.id, 'Wronf date param!!!!')
-            bot.send_message(msg.chat.id, 'Repeat command with correct date')
+        print_list(list(list_tasks_filtred), msg_id)
 
 
 @bot.message_handler(commands=["add"])
@@ -169,7 +164,7 @@ def check_date(msg) :
 def print_list(lfp, msg_id) :
     answ = ''
     lfp_ord = lfp
-    lfp_ord.sort(key=itemgetter(1))
+    lfp_ord.sort(key=itemgetter(1,2))
     cur_date = ''
     pref_date = ''
     for task in lfp :
