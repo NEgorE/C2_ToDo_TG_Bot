@@ -52,7 +52,11 @@ def show(msg) :
     else :
         p_date_in = msg_text[msg_text.find(' ')+1:len(msg_text)]
         list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
-        print_list(list(list_tasks_filtred), msg_id)
+        if len(list_tasks_filtred) > 0 :
+            print_list(list(list_tasks_filtred), msg_id)
+        else :
+            bot.send_message(msg.chat.id, 'Wronf date param!!!!')
+            bot.send_message(msg.chat.id, 'Repeat command with correct date')
 
 
 @bot.message_handler(commands=["add"])
@@ -80,27 +84,57 @@ def add(msg, com):
             add_task_list.append(in_date)
             bot.send_message(msg.chat.id, 'Input task time (HH:MM): ')
             bot.register_next_step_handler(msg, add, 'INPUT_TIME')       
-    elif com == 'INPUT_TIME' :
+    elif com in ['INPUT_TIME','INPUT_NOTIF_TIME'] :
         in_time = check_time(msg)
         print(in_time)
         if in_time == '' :
-            bot.register_next_step_handler(msg, add, 'INPUT_TIME')
+            if com == 'INPUT_TIME' :
+                bot.register_next_step_handler(msg, add, 'INPUT_TIME')
+            else :
+                bot.register_next_step_handler(msg, add, 'INPUT_NOTIF_TIME')
         else :
             add_task_list.append(in_time)
-            bot.send_message(msg.chat.id, 'Need notification? (input Y or N): ')
-            bot.register_next_step_handler(msg, add, 'NOTIF_NEED')
+            if com == 'INPUT_TIME' :
+                bot.send_message(msg.chat.id, 'Task task text:')
+                bot.register_next_step_handler(msg, add, 'TASK_TEXT')
+            else :
+                add_task_list.append('ToDo')
+                list_tasks.append(tuple(add_task_list))
+                save_file(list_tasks)
     elif com == 'NOTIF_NEED' :
         in_notif_need = msg.text
         print(in_notif_need)
         if in_notif_need == 'Y' :
             add_task_list.append(in_notif_need)
-            #bot.register_next_step_handler(msg, add, 'INPUT_NOTIF_TIME')
+            bot.send_message(msg.chat.id, 'Input notif time (HH:MM): ')
+            bot.register_next_step_handler(msg, add, 'INPUT_NOTIF_TIME')
         elif in_notif_need == 'N' :
             add_task_list.append(in_notif_need)
+            add_task_list.append('')
+            add_task_list.append('ToDo')
+            list_tasks.append(tuple(add_task_list))
+            save_file(list_tasks)
         else :
             bot.send_message(msg.chat.id, 'Wrong input!!!')
             bot.send_message(msg.chat.id, 'Need notification? (input Y or N): ')
             bot.register_next_step_handler(msg, add, 'NOTIF_NEED')
+    elif com == 'TASK_TEXT' :
+        in_task_text = msg.text
+        if in_task_text == '' :
+            bot.send_message(msg.chat.id, 'Task text cant be empty!!!')
+            bot.send_message(msg.chat.id, 'Task task text:')
+            bot.register_next_step_handler(msg, add, 'TASK_TEXT')
+        else :
+            add_task_list.append(in_task_text)
+            bot.send_message(msg.chat.id, 'Need notification? (input Y or N): ')
+            bot.register_next_step_handler(msg, add, 'NOTIF_NEED')
+
+
+def save_file (t_list) :
+    t_list.sort(key=itemgetter(0))
+    with open(FILE, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows(t_list)
 
 
 def check_time(msg) :
