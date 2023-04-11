@@ -3,7 +3,6 @@ from operator import itemgetter
 import datetime
 import csv
 import os.path
-import time
 
 from token_str import token
 bot = telebot.TeleBot(token)
@@ -11,10 +10,11 @@ bot = telebot.TeleBot(token)
 FILE = 's_list.txt'
 HELP = '''
 Available commands:
-/show <date>    - show all tasks for date (first 10 if date is empty)
-/add            - add new task
-/del <date><taskId> - del task by ID or all tasks for date
-/help           - show all available commands\n
+/show <param>   - show list of tasks
+             <param> - date/'all'/[empty]
+/add                    - add new task
+/del  <param>   - del task by ID or all tasks for date
+/help                   - show all available commands\n
 '''
 
 input_str = ''
@@ -22,8 +22,8 @@ list_tasks = []
 add_task_list = []
 if os.path.isfile(FILE) :
     f_list_tasks = open(FILE, 'r')
-    for str in f_list_tasks :
-        list_tasks.append(tuple(str.replace('\n','').split(',')))
+    for str_r in f_list_tasks :
+        list_tasks.append(tuple(str_r.replace('\n','').split(',')))
     f_list_tasks.close()
     list_tasks.sort(key=itemgetter(0))
     if len(list_tasks) > 0 :
@@ -33,49 +33,63 @@ if os.path.isfile(FILE) :
 
 @bot.message_handler(commands=["help"])
 def help(msg) :
-    print(msg.text)
     bot.send_message(msg.chat.id, HELP)
 
 
 @bot.message_handler(commands=["show"])
 def show(msg) :
     global add_task_list
-    print(add_task_list)
     msg_id = msg.chat.id
     msg_text = msg.text
-    print(msg_text)
     global list_tasks
     if msg_text == '/show' :
-        print_list(list_tasks, msg_id)
+        list_tasks.sort(key=itemgetter(1,2))
+        print_list(list_tasks[:5], msg_id)
     else :
         p_date_in = msg_text[msg_text.find(' ')+1:len(msg_text)]
-        list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
-        print_list(list(list_tasks_filtred), msg_id)
+        if p_date_in == 'all' :
+            print_list(list_tasks[:100], msg_id)
+        else :
+            list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
+            print_list(list(list_tasks_filtred), msg_id)
 
 
 @bot.message_handler(commands=["add"])
 def add_init(msg) :
-    msg_id = msg.chat.id
-    msg_text = msg.text
-    print(msg_text)
-    bot.send_message(msg_id, 'start add mode')
     add(msg,'INIT')
-    bot.send_message(msg_id, 'Input date pls (YYYY-MM-DD)')
-    bot.register_next_step_handler(msg, add, 'INPUT_DATE')
+
 
 @bot.message_handler(commands=["del"])
-def del_by_id(msg) :
-    bot.send_message(msg.chat.id, 'Del mod')
+def del_tasks(msg) :
+    global list_tasks
+    new_list_task = []
+    if msg.text == '/del' :
+        bot.send_message(msg.chat.id, 'I can\'t del all tasks.\nYou have to input at least 1 param after command /del !!!')
+    else :
+        param_in = msg.text[msg.text.find(' ')+1:len(msg.text)]
+        if param_in.isdigit() :
+            new_list_task = list(filter(lambda t: (t[0] != param_in) , list_tasks))
+        else :
+            new_list_task = list(filter(lambda t: (t[1] != param_in) , list_tasks))
+        if len(new_list_task) == len(list_tasks) :
+            bot.send_message(msg.chat.id, 'Cant find tasks for inputed param!!!')
+            bot.register_next_step_handler(msg, del_tasks)
+        else :
+            del_count = len(list_tasks) - len(new_list_task)
+            list_tasks = new_list_task
+            save_file(list_tasks)
+            bot.send_message(msg.chat.id, f'You del {del_count} tasks.')
 
 
 def add(msg, com):
     global max_task_in_file, add_task_list
     if com == 'INIT' :
         max_task_in_file += 1
-        add_task_list.append(max_task_in_file)
+        add_task_list.append(str(max_task_in_file))
+        bot.send_message(msg.chat.id, 'Input date pls (YYYY-MM-DD)')
+        bot.register_next_step_handler(msg, add, 'INPUT_DATE')
     elif com == 'INPUT_DATE' :
         in_date = check_date(msg)
-        print(in_date)
         if in_date == '' :
             bot.register_next_step_handler(msg, add, 'INPUT_DATE')
         else :
@@ -84,7 +98,6 @@ def add(msg, com):
             bot.register_next_step_handler(msg, add, 'INPUT_TIME')       
     elif com in ['INPUT_TIME','INPUT_NOTIF_TIME'] :
         in_time = check_time(msg)
-        print(in_time)
         if in_time == '' :
             if com == 'INPUT_TIME' :
                 bot.register_next_step_handler(msg, add, 'INPUT_TIME')
@@ -101,7 +114,6 @@ def add(msg, com):
                 save_file(list_tasks)
     elif com == 'NOTIF_NEED' :
         in_notif_need = msg.text
-        print(in_notif_need)
         if in_notif_need == 'Y' :
             add_task_list.append(in_notif_need)
             bot.send_message(msg.chat.id, 'Input notif time (HH:MM): ')
@@ -129,7 +141,7 @@ def add(msg, com):
 
 
 def save_file (t_list) :
-    t_list.sort(key=itemgetter(0))
+    t_list.sort(key=itemgetter(1))
     with open(FILE, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerows(t_list)
