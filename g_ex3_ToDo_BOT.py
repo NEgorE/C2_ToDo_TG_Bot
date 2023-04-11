@@ -5,12 +5,13 @@ import csv
 import os.path
 import time
 
-#3,2020-01-20,15:15,add_task1,N,,ToDo
-#4,2020-01-20,16:00,add_task2,Y,15:30,ToDo
 #1,2023-03-30,15:30,Test task n1,N,,ToDo
 #2,2023-03-31,08:30,Test task n2,N,,ToDo
+#3,2020-01-20,15:15,add_task1,N,,ToDo
+#4,2020-01-20,16:00,add_task2,Y,15:30,ToDo
 #5,2024-01-01,08:00,HNY,Y,07:45,ToDo
 #6,2024-02-01,15:52,fghfjh,N,,ToDo
+#7,2023-05-01,15:12,Add task pls,N,,ToDo
 
 
 from token_str import token
@@ -19,7 +20,8 @@ bot = telebot.TeleBot(token)
 FILE = 's_list.txt'
 HELP = '''
 Available commands:
-/show <param>    - show all tasks for date(first 5 tasks if param is empty)
+/show <param>   - show list of tasks
+             <param> - date/'all'/[empty]
 /add                    - add new task
 /del  <param>   - del task by ID or all tasks for date
 /help                   - show all available commands\n
@@ -30,8 +32,8 @@ list_tasks = []
 add_task_list = []
 if os.path.isfile(FILE) :
     f_list_tasks = open(FILE, 'r')
-    for str in f_list_tasks :
-        list_tasks.append(tuple(str.replace('\n','').split(',')))
+    for str_r in f_list_tasks :
+        list_tasks.append(tuple(str_r.replace('\n','').split(',')))
     f_list_tasks.close()
     list_tasks.sort(key=itemgetter(0))
     if len(list_tasks) > 0 :
@@ -67,24 +69,41 @@ def show(msg) :
 
 @bot.message_handler(commands=["add"])
 def add_init(msg) :
-    msg_id = msg.chat.id
-    msg_text = msg.text
-    print(msg_text)
-    bot.send_message(msg_id, 'start add mode')
     add(msg,'INIT')
-    bot.send_message(msg_id, 'Input date pls (YYYY-MM-DD)')
-    bot.register_next_step_handler(msg, add, 'INPUT_DATE')
+
 
 @bot.message_handler(commands=["del"])
-def del_by_id(msg) :
-    bot.send_message(msg.chat.id, 'Del mod')
+def del_tasks(msg) :
+    global list_tasks
+    new_list_task = []
+    if msg.text == '/del' :
+        bot.send_message(msg.chat.id, 'I can\'t del all tasks.\nYou have to input at least 1 param after command /del !!!')
+        #bot.register_next_step_handler(msg, del_tasks)
+    else :
+        param_in = msg.text[msg.text.find(' ')+1:len(msg.text)]
+        if param_in.isdigit() :
+            bot.send_message(msg.chat.id, f'u input id {param_in}')
+            new_list_task = list(filter(lambda t: (t[0] != param_in) , list_tasks))
+        else :
+            bot.send_message(msg.chat.id, f'u input date {param_in}') 
+            new_list_task = list(filter(lambda t: (t[1] != param_in) , list_tasks))
+        if len(new_list_task) == len(list_tasks) :
+            bot.send_message(msg.chat.id, 'Cant find tasks for inputed param!!!')
+            bot.register_next_step_handler(msg, del_tasks)
+        else :
+            del_count = len(list_tasks) - len(new_list_task)
+            list_tasks = new_list_task
+            save_file(list_tasks)
+            bot.send_message(msg.chat.id, f'You del {del_count} tasks.')
 
 
 def add(msg, com):
     global max_task_in_file, add_task_list
     if com == 'INIT' :
         max_task_in_file += 1
-        add_task_list.append(max_task_in_file)
+        add_task_list.append(str(max_task_in_file))
+        bot.send_message(msg.chat.id, 'Input date pls (YYYY-MM-DD)')
+        bot.register_next_step_handler(msg, add, 'INPUT_DATE')
     elif com == 'INPUT_DATE' :
         in_date = check_date(msg)
         print(in_date)
@@ -141,7 +160,7 @@ def add(msg, com):
 
 
 def save_file (t_list) :
-    t_list.sort(key=itemgetter(0))
+    t_list.sort(key=itemgetter(1))
     with open(FILE, 'w', newline='') as f:
             writer = csv.writer(f)
             writer.writerows(t_list)
