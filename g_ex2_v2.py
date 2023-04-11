@@ -49,6 +49,7 @@ def print_list(lfp) :
 def check_date(msg) :
     date_format = '%Y-%m-%d'
     date_loop = True
+    t_date_in = ''
     while date_loop :
         t_date_in = input(msg)
         try:
@@ -61,6 +62,7 @@ def check_date(msg) :
 
 def check_time(msg) :
     time_loop = True
+    t_time_in = ''
     while time_loop :
         t_time_in = input(msg)
         try :

@@ -5,16 +5,24 @@ import csv
 import os.path
 import time
 
+#3,2020-01-20,15:15,add_task1,N,,ToDo
+#4,2020-01-20,16:00,add_task2,Y,15:30,ToDo
+#1,2023-03-30,15:30,Test task n1,N,,ToDo
+#2,2023-03-31,08:30,Test task n2,N,,ToDo
+#5,2024-01-01,08:00,HNY,Y,07:45,ToDo
+#6,2024-02-01,15:52,fghfjh,N,,ToDo
+
+
 from token_str import token
 bot = telebot.TeleBot(token)
 
 FILE = 's_list.txt'
 HELP = '''
 Available commands:
-/show <date>    - show all tasks for date (first 10 if date is empty)
-/add            - add new task
-/del <date><taskId> - del task by ID or all tasks for date
-/help           - show all available commands\n
+/show <param>    - show all tasks for date(first 5 tasks if param is empty)
+/add                    - add new task
+/del  <param>   - del task by ID or all tasks for date
+/help                   - show all available commands\n
 '''
 
 input_str = ''
@@ -46,11 +54,15 @@ def show(msg) :
     print(msg_text)
     global list_tasks
     if msg_text == '/show' :
-        print_list(list_tasks, msg_id)
+        list_tasks.sort(key=itemgetter(1,2))
+        print_list(list_tasks[:5], msg_id)
     else :
         p_date_in = msg_text[msg_text.find(' ')+1:len(msg_text)]
-        list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
-        print_list(list(list_tasks_filtred), msg_id)
+        if p_date_in == 'all' :
+            print_list(list_tasks[:100], msg_id)
+        else :
+            list_tasks_filtred = filter(lambda t: (t[1] == p_date_in) , list_tasks)
+            print_list(list(list_tasks_filtred), msg_id)
 
 
 @bot.message_handler(commands=["add"])
